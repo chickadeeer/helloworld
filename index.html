@@ -1,1 +1,246 @@
-locked down for now
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chickadee // Profile</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+  @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Space Mono', monospace;
+    background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  #hidden-asset {
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 3rem 4rem;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    transition: all 0.5s ease;
+    overflow: hidden;
+  }
+
+  .card.expanded { max-width: 800px; }
+
+  h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    opacity: 0;
+    animation: fadeInUp 1s ease forwards;
+  }
+
+  p {
+    font-size: 1.2rem;
+    color: #ccc;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeInUp 1s ease forwards;
+    animation-delay: 0.3s;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 36px;
+    background: #fff;
+    color: #000;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    opacity: 0;
+    animation: fadeInUp 1s ease forwards;
+    animation-delay: 0.6s;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255,255,255,0.3);
+  }
+
+  .tabs {
+    display: none;
+    margin-top: 2rem;
+    text-align: left;
+  }
+
+  .tabs.active { display: block; }
+
+  .tab-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .tab-buttons button {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .tab-buttons button.active,
+  .tab-buttons button:hover {
+    background: #fff;
+    color: #000;
+  }
+
+  .tab-content {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #ccc;
+  }
+
+  .tab-content ul {
+    list-style: none;
+  }
+
+  .tab-content li {
+    margin-bottom: 0.7rem;
+  }
+
+  /* --- SOCIAL ICONS FIXED --- */
+  .social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    line-height: 0; /* remove extra vertical spacing */
+  }
+
+  .social-icons a {
+    display: inline-block;  
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.5rem;
+    line-height: 0; /* ensures no lines under icons */
+    transition: transform 0.2s, filter 0.2s;
+  }
+
+  .social-icons a:hover {
+    transform: scale(1.2);
+  }
+
+  .social-icons i,
+  .social-icons img {
+    display: block; /* removes baseline spacing */
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+    margin: 0;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<img src="https://detailsplease.s68781738.workers.dev/" id="hidden-asset" alt="">
+
+<div class="card" id="card">
+  <h1>Chickadee</h1>
+  <p>Hello!</p>
+  <div class="btn" id="enterBtn">Enter</div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab-buttons">
+      <button class="active" data-tab="about">About</button>
+      <button data-tab="socials">Socials</button>
+      <button data-tab="interests">Interests</button>
+    </div>
+
+    <div class="tab-content" id="tabContent">
+      <div id="about">
+        Hi! I am Chickadee, someone who is chronically online :) I love tech, I fuck around with computers a lot.
+      </div>
+
+      <div id="socials" style="display:none;">
+        <div class="social-icons">
+          <a href="https://discord.com/users/1379652230587875411" target="_blank" title="Discord">
+            <i class="fab fa-discord"></i>
+          </a>
+          <a href="https://www.youtube.com/@khikcadee" target="_blank" title="YouTube">
+            <i class="fab fa-youtube"></i>
+          </a>
+          <a href="https://open.spotify.com/user/31ybo4syu7drzve3swq7e4ytt32u" target="_blank" title="Spotify">
+            <i class="fab fa-spotify"></i>
+          </a>
+          <a href="https://www.roblox.com/users/9099412669/profile" target="_blank" title="Roblox">
+            <img src="https://assets.streamlinehq.com/image/private/w_300,h_300,ar_1/f_auto/v1/icons/logos/roblox-cf3lgdtwcx4srcc6moym1.png/roblox-qzs1pl7s92adfh1cavabc6.png?_a=DATAg1AAZAA0" alt="Roblox">
+          </a>
+        </div>
+      </div>
+
+      <div id="interests" style="display:none;">
+        <ul>
+          <li>Computers</li>
+          <li>Roblox</li>
+          <li>Minecraft</li>
+          <li>VR</li>
+          <li>Roblox</li>
+          <li>Roblox</li>
+          <li>Even more Roblox</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const enterBtn = document.getElementById('enterBtn');
+const card = document.getElementById('card');
+const tabs = document.getElementById('tabs');
+const tabButtons = tabs.querySelectorAll('button');
+const tabContent = tabs.querySelectorAll('#tabs > .tab-content > div, #tabContent > div');
+
+enterBtn.addEventListener('click', () => {
+  card.classList.add('expanded');
+  tabs.classList.add('active');
+  enterBtn.style.display = 'none';
+});
+
+tabButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    tabContent.forEach(content => content.style.display = 'none');
+    const selected = document.getElementById(btn.dataset.tab);
+    if (selected) selected.style.display = 'block';
+  });
+});
+</script>
+
+</body>
+</html>
