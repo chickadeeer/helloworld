@@ -1,6 +1,344 @@
 <!DOCTYPE html>
-<html>
-<body style="margin:0">
-<iframe src="https://megaplay.buzz/stream/mal/813/1/dub" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sure Thing!</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --accent: #ff3c3c;
+  --accent2: #ff7c3c;
+  --text: #f0f0f8;
+  --muted: #6b6b80;
+  --border: rgba(255,255,255,0.07);
+  --radius: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+
+/* LAYOUT */
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+header { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.search-wrap { flex: 1; max-width: 400px; position: relative; }
+#search-input { width: 100%; padding: 10px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; }
+#search-input:focus { border-color: var(--accent); }
+#search-input::placeholder { color: var(--muted); }
+
+main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+/* PLAYER */
+#player-section { display: none; margin-bottom: 2rem; }
+#player-section.active { display: block; }
+.player-wrap { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.player-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+
+.player-controls { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.now-playing { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; flex: 1; min-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-label { font-size: 13px; color: var(--muted); }
+
+.btn { padding: 10px 20px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+.btn:active { transform: scale(0.97); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+.btn.primary:hover { background: #cc2e2e; color: #fff; }
+.btn.icon { padding: 10px 14px; font-size: 18px; }
+
+/* LANG TOGGLE */
+.lang-toggle { display: flex; background: var(--surface2); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.lang-toggle button { padding: 8px 16px; border: none; background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.15s; }
+.lang-toggle button.active { background: var(--accent); color: #fff; }
+
+/* EP PICKER */
+.ep-picker { display: flex; align-items: center; gap: 8px; }
+.ep-picker input { width: 70px; padding: 9px; text-align: center; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; }
+.ep-picker input:focus { border-color: var(--accent); }
+
+/* SECTIONS */
+.section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: var(--muted); margin-bottom: 1rem; text-transform: uppercase; }
+
+/* CARDS GRID */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 2rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; cursor: pointer; transition: all 0.2s; position: relative; }
+.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.card-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; line-height: 1.3; }
+.card-sub { font-size: 12px; color: var(--muted); }
+.card-ep { position: absolute; top: 8px; right: 8px; background: var(--accent); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 999px; font-weight: 500; }
+.card-remove { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); border: none; color: var(--muted); font-size: 16px; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; line-height: 1; }
+.card:hover .card-remove { display: flex; }
+.card-remove:hover { color: var(--accent); }
+
+/* MAL SEARCH */
+.mal-row { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.mal-row input { flex: 1; min-width: 120px; padding: 10px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; }
+.mal-row input:focus { border-color: var(--accent); }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 15px; }
+.empty .icon { font-size: 40px; margin-bottom: 1rem; }
+
+/* QUICK IDS */
+.quick-ids { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.quick-chip { padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--text); }
+.quick-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  header { flex-wrap: wrap; }
+  .search-wrap { max-width: 100%; width: 100%; }
+  .player-controls { gap: 8px; }
+  .now-playing { font-size: 18px; }
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+/* TOAST */
+#toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 999px; font-size: 14px; transition: transform 0.3s; z-index: 999; pointer-events: none; white-space: nowrap; }
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">Sure Thing!</div>
+    <div class="search-wrap">
+      <input id="search-input" type="text" placeholder="Search anime name... (opens MAL)" />
+    </div>
+  </header>
+
+  <main>
+    <!-- PLAYER -->
+    <section id="player-section">
+      <div class="player-wrap">
+        <iframe id="player-frame" src="" allowfullscreen></iframe>
+      </div>
+      <div class="player-controls">
+        <div>
+          <div class="now-playing" id="now-playing-title">—</div>
+          <div class="ep-label" id="now-playing-ep">Episode 1</div>
+        </div>
+        <div class="ep-picker">
+          <button class="btn icon" onclick="skipEp(-1)" title="Previous episode">←</button>
+          <input type="number" id="ep-input" value="1" min="1" max="9999" onchange="goToEp()" />
+          <button class="btn icon" onclick="skipEp(1)" title="Next episode">→</button>
+        </div>
+        <div class="lang-toggle">
+          <button id="lang-dub" class="active" onclick="setLang('dub')">DUB</button>
+          <button id="lang-sub" onclick="setLang('sub')">SUB</button>
+        </div>
+        <button class="btn" onclick="saveToWatchlist()">+ Watchlist</button>
+        <button class="btn" onclick="closePlayer()">✕ Close</button>
+      </div>
+    </section>
+
+    <!-- LOAD BY MAL ID -->
+    <div class="section-title">Load Anime</div>
+    <div class="mal-row">
+      <input type="number" id="mal-input" placeholder="MAL ID (e.g. 813)" />
+      <input type="text" id="name-input" placeholder="Anime name (optional)" />
+      <button class="btn primary" onclick="loadFromInput()">▶ Play</button>
+    </div>
+
+    <div class="quick-ids">
+      <div class="quick-chip" onclick="quickLoad(813,'Dragon Ball Z')">Dragon Ball Z</div>
+      <div class="quick-chip" onclick="quickLoad(30694,'Dragon Ball Super')">DB Super</div>
+      <div class="quick-chip" onclick="quickLoad(20,'Naruto')">Naruto</div>
+      <div class="quick-chip" onclick="quickLoad(21,'One Piece')">One Piece</div>
+      <div class="quick-chip" onclick="quickLoad(16498,'Attack on Titan')">Attack on Titan</div>
+      <div class="quick-chip" onclick="quickLoad(1,'Cowboy Bebop')">Cowboy Bebop</div>
+      <div class="quick-chip" onclick="quickLoad(5114,'FMA Brotherhood')">FMA Brotherhood</div>
+      <div class="quick-chip" onclick="quickLoad(11061,'Hunter x Hunter')">Hunter x Hunter</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CONTINUE WATCHING -->
+    <div id="continue-section">
+      <div class="section-title">Continue Watching</div>
+      <div class="grid" id="continue-grid"></div>
+    </div>
+
+    <!-- WATCHLIST -->
+    <div id="watchlist-section">
+      <div class="section-title">Watchlist</div>
+      <div class="grid" id="watchlist-grid"></div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const STORAGE_KEY_CW = 'anistream_continue';
+const STORAGE_KEY_WL = 'anistream_watchlist';
+
+let currentMal = null;
+let currentEp = 1;
+let currentLang = 'dub';
+let currentTitle = '';
+
+function getUrl(mal, ep, lang) {
+  return `https://megaplay.buzz/stream/mal/${mal}/${ep}/${lang}`;
+}
+
+function loadPlayer(mal, ep, lang, title) {
+  mal = parseInt(mal);
+  ep = parseInt(ep) || 1;
+  currentMal = mal;
+  currentEp = ep;
+  currentLang = lang || 'dub';
+  currentTitle = title || `MAL #${mal}`;
+
+  document.getElementById('player-frame').src = getUrl(mal, ep, currentLang);
+  document.getElementById('player-section').classList.add('active');
+  document.getElementById('now-playing-title').textContent = currentTitle;
+  document.getElementById('now-playing-ep').textContent = `Episode ${ep}`;
+  document.getElementById('ep-input').value = ep;
+  document.getElementById('lang-dub').className = currentLang === 'dub' ? 'active' : '';
+  document.getElementById('lang-sub').className = currentLang === 'sub' ? 'active' : '';
+
+  saveContinue(mal, ep, currentTitle);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function loadFromInput() {
+  const mal = document.getElementById('mal-input').value;
+  const name = document.getElementById('name-input').value || `MAL #${mal}`;
+  if (!mal) { toast('Enter a MAL ID'); return; }
+  loadPlayer(mal, 1, currentLang, name);
+}
+
+function quickLoad(mal, title) {
+  document.getElementById('mal-input').value = mal;
+  document.getElementById('name-input').value = title;
+  loadPlayer(mal, 1, currentLang, title);
+}
+
+function skipEp(delta) {
+  const newEp = Math.max(1, currentEp + delta);
+  loadPlayer(currentMal, newEp, currentLang, currentTitle);
+}
+
+function goToEp() {
+  const ep = parseInt(document.getElementById('ep-input').value) || 1;
+  loadPlayer(currentMal, ep, currentLang, currentTitle);
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById('lang-dub').className = lang === 'dub' ? 'active' : '';
+  document.getElementById('lang-sub').className = lang === 'sub' ? 'active' : '';
+  loadPlayer(currentMal, currentEp, lang, currentTitle);
+}
+
+function closePlayer() {
+  document.getElementById('player-section').classList.remove('active');
+  document.getElementById('player-frame').src = '';
+}
+
+// CONTINUE WATCHING
+function saveContinue(mal, ep, title) {
+  let cw = JSON.parse(localStorage.getItem(STORAGE_KEY_CW) || '[]');
+  cw = cw.filter(x => x.mal !== mal);
+  cw.unshift({ mal, ep, title, ts: Date.now() });
+  cw = cw.slice(0, 12);
+  localStorage.setItem(STORAGE_KEY_CW, JSON.stringify(cw));
+  renderContinue();
+}
+
+function renderContinue() {
+  const cw = JSON.parse(localStorage.getItem(STORAGE_KEY_CW) || '[]');
+  const grid = document.getElementById('continue-grid');
+  const section = document.getElementById('continue-section');
+  if (!cw.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  grid.innerHTML = cw.map(item => `
+    <div class="card" onclick="loadPlayer(${item.mal}, ${item.ep}, '${currentLang}', '${escHtml(item.title)}')">
+      <button class="card-remove" onclick="event.stopPropagation(); removeContinue(${item.mal})">✕</button>
+      <div class="card-ep">EP ${item.ep}</div>
+      <div class="card-title">${escHtml(item.title)}</div>
+      <div class="card-sub">MAL #${item.mal}</div>
+    </div>
+  `).join('');
+}
+
+function removeContinue(mal) {
+  let cw = JSON.parse(localStorage.getItem(STORAGE_KEY_CW) || '[]');
+  cw = cw.filter(x => x.mal !== mal);
+  localStorage.setItem(STORAGE_KEY_CW, JSON.stringify(cw));
+  renderContinue();
+}
+
+// WATCHLIST
+function saveToWatchlist() {
+  if (!currentMal) { toast('Nothing playing'); return; }
+  let wl = JSON.parse(localStorage.getItem(STORAGE_KEY_WL) || '[]');
+  if (wl.find(x => x.mal === currentMal)) { toast('Already in watchlist'); return; }
+  wl.unshift({ mal: currentMal, title: currentTitle });
+  localStorage.setItem(STORAGE_KEY_WL, JSON.stringify(wl));
+  renderWatchlist();
+  toast('Added to watchlist ✓');
+}
+
+function renderWatchlist() {
+  const wl = JSON.parse(localStorage.getItem(STORAGE_KEY_WL) || '[]');
+  const grid = document.getElementById('watchlist-grid');
+  const section = document.getElementById('watchlist-section');
+  if (!wl.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  grid.innerHTML = wl.map(item => `
+    <div class="card" onclick="loadPlayer(${item.mal}, 1, '${currentLang}', '${escHtml(item.title)}')">
+      <button class="card-remove" onclick="event.stopPropagation(); removeWatchlist(${item.mal})">✕</button>
+      <div class="card-title">${escHtml(item.title)}</div>
+      <div class="card-sub">MAL #${item.mal}</div>
+    </div>
+  `).join('');
+}
+
+function removeWatchlist(mal) {
+  let wl = JSON.parse(localStorage.getItem(STORAGE_KEY_WL) || '[]');
+  wl = wl.filter(x => x.mal !== mal);
+  localStorage.setItem(STORAGE_KEY_WL, JSON.stringify(wl));
+  renderWatchlist();
+}
+
+// SEARCH — opens MAL search
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const q = e.target.value.trim();
+    if (q) window.open(`https://myanimelist.net/anime.php?q=${encodeURIComponent(q)}&cat=anime`, '_blank');
+  }
+});
+
+// TOAST
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function escHtml(s) {
+  return String(s).replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// INIT
+renderContinue();
+renderWatchlist();
+document.getElementById('continue-section').style.display = 'none';
+document.getElementById('watchlist-section').style.display = 'none';
+renderContinue();
+renderWatchlist();
+</script>
 </body>
 </html>
