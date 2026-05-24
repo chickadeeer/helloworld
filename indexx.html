@@ -10,8 +10,8 @@
   --bg: #0a0a0f;
   --surface: #13131a;
   --surface2: #1c1c26;
-  --accent: #ff3c3c;
-  --accent2: #ff7c3c;
+  --accent: #3c8fff;
+  --accent2: #3cdfff;
   --text: #f0f0f8;
   --muted: #6b6b80;
   --border: rgba(255,255,255,0.07);
@@ -331,6 +331,27 @@ function toast(msg) {
 function escHtml(s) {
   return String(s).replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// AUTO NEXT via postMessage (megaplay sends 'complete' event)
+window.addEventListener('message', function(event) {
+  let data = event.data;
+  if (typeof data === 'string') {
+    try { data = JSON.parse(data); } catch(e) { return; }
+  }
+  if (data.channel === 'megacloud' || data.type === 'watching-log') {
+    // update continue watching with current time
+    if (data.type === 'watching-log' && currentMal) {
+      saveContinue(currentMal, currentEp, currentTitle);
+    }
+  }
+  if (data.event === 'complete' && currentMal) {
+    toast('Episode complete! Loading next... ▶');
+    setTimeout(() => skipEp(1), 1500);
+  }
+  if (data.event === 'time' && currentMal) {
+    saveContinue(currentMal, currentEp, currentTitle);
+  }
+});
 
 // INIT
 renderContinue();
