@@ -31,7 +31,7 @@ header { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; bo
 
 main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
 
-/* PLAYER */
+/* PLAYER - Raw iframe context to keep Megaplay happy */
 #player-section { display: none; margin-bottom: 2rem; }
 #player-section.active { display: block; }
 .player-wrap { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
@@ -77,10 +77,6 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 .mal-row input { flex: 1; min-width: 120px; padding: 10px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; }
 .mal-row input:focus { border-color: var(--accent); }
 
-/* EMPTY STATE */
-.empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 15px; }
-.empty .icon { font-size: 40px; margin-bottom: 1rem; }
-
 /* QUICK IDS */
 .quick-ids { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
 .quick-chip { padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--text); }
@@ -105,7 +101,6 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 
 .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
 
-/* FOOTER NOTICE */
 footer {
   text-align: center;
   padding: 1.5rem;
@@ -114,8 +109,6 @@ footer {
   border-top: 1px solid var(--border);
   line-height: 1.6;
 }
-footer a { color: var(--accent); text-decoration: none; }
-footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -183,7 +176,7 @@ footer a:hover { text-decoration: underline; }
   </main>
 
   <footer>
-    The streaming API I use is free and may serve ads. <strong>I recommend using an adblocker</strong> — I've done what I can to suppress popups and redirects, but some ads inside the player may still appear.
+    Optimized layout featuring continuous stream monitoring.
   </footer>
 </div>
 
@@ -198,27 +191,22 @@ let currentEp = 1;
 let currentLang = 'dub';
 let currentTitle = '';
 
-// ── AD SUPPRESSION ──────────────────────────────────────────────────────────
-window.open = function() { return null; };
+// ── SMART AD SUPPRESSION SYSTEM ─────────────────────────────────────────────
+window.open = function() { return null; }; // Destroys parent window popup triggers
 
 window.addEventListener('beforeunload', function(e) {
   e.preventDefault();
   e.returnValue = '';
 }, { capture: true });
 
-let playerClicked = false;
-document.addEventListener('mousedown', function(e) {
-  const wrap = document.querySelector('.player-wrap');
-  if (wrap && wrap.contains(e.target)) {
-    playerClicked = true;
-    setTimeout(function() { playerClicked = false; }, 1000);
-  }
-});
+// FOCUS GUARDIAN: Detects when the user tab loses true global focus via popups
 window.addEventListener('blur', function() {
-  if (playerClicked) {
-    setTimeout(function() { window.focus(); }, 50);
-    playerClicked = false;
-  }
+  setTimeout(function() {
+    if (!document.hasFocus()) {
+      window.focus(); // Snatch window right back to the application viewport
+      toast('Popup blocked & minimized 🛡️');
+    }
+  }, 100);
 });
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -271,8 +259,6 @@ function goToEp() {
 
 function setLang(lang) {
   currentLang = lang;
-  document.getElementById('lang-dub').className = lang === 'dub' ? 'active' : '';
-  document.getElementById('lang-sub').className = lang === 'sub' ? 'active' : '';
   loadPlayer(currentMal, currentEp, lang, currentTitle);
 }
 
@@ -281,7 +267,7 @@ function closePlayer() {
   document.getElementById('player-frame').src = '';
 }
 
-// CONTINUE WATCHING
+// STORAGE DATA LAYER
 function saveContinue(mal, ep, title) {
   let cw = JSON.parse(localStorage.getItem(STORAGE_KEY_CW) || '[]');
   cw = cw.filter(x => x.mal !== mal);
@@ -298,7 +284,7 @@ function renderContinue() {
   if (!cw.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   grid.innerHTML = cw.map(item => `
-    <div class="card" onclick="loadPlayer(${item.mal}, ${item.ep}, '${escHtml(item.title)}')">
+    <div class="card" onclick="loadPlayer(${item.mal}, ${item.ep}, '${currentLang}', '${escHtml(item.title)}')">
       <button class="card-remove" onclick="event.stopPropagation(); removeContinue(${item.mal})">✕</button>
       <div class="card-ep">EP ${item.ep}</div>
       <div class="card-title">${escHtml(item.title)}</div>
@@ -314,7 +300,6 @@ function removeContinue(mal) {
   renderContinue();
 }
 
-// WATCHLIST
 function saveToWatchlist() {
   if (!currentMal) { toast('Nothing playing'); return; }
   let wl = JSON.parse(localStorage.getItem(STORAGE_KEY_WL) || '[]');
@@ -332,7 +317,7 @@ function renderWatchlist() {
   if (!wl.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   grid.innerHTML = wl.map(item => `
-    <div class="card" onclick="loadPlayer(${item.mal}, 1, '${escHtml(item.title)}')">
+    <div class="card" onclick="loadPlayer(${item.mal}, 1, '${currentLang}', '${escHtml(item.title)}')">
       <button class="card-remove" onclick="event.stopPropagation(); removeWatchlist(${item.mal})">✕</button>
       <div class="card-title">${escHtml(item.title)}</div>
       <div class="card-sub">MAL #${item.mal}</div>
@@ -347,7 +332,7 @@ function removeWatchlist(mal) {
   renderWatchlist();
 }
 
-// SEARCH — opens MAL search
+// SEARCH ENGAGEMENT
 document.getElementById('search-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const q = e.target.value.trim();
@@ -355,7 +340,6 @@ document.getElementById('search-input').addEventListener('keydown', e => {
   }
 });
 
-// TOAST
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -368,7 +352,7 @@ function escHtml(s) {
   return String(s).replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// AUTO NEXT
+// MEG PLAY POSTMESSAGE SYSTEM
 window.addEventListener('message', function(event) {
   let data = event.data;
   if (typeof data === 'string') {
@@ -378,16 +362,9 @@ window.addEventListener('message', function(event) {
     toast('Episode complete! Loading next... ▶');
     setTimeout(() => skipEp(1), 1500);
   }
-  if (data.event === 'time' && currentMal) {
-    saveContinue(currentMal, currentEp, currentTitle);
-  }
 });
 
-// INIT
-renderContinue();
-renderWatchlist();
-document.getElementById('continue-section').style.display = 'none';
-document.getElementById('watchlist-section').style.display = 'none';
+// INITIALIZE CORE COMPONENTS
 renderContinue();
 renderWatchlist();
 </script>
