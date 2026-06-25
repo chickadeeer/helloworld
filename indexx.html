@@ -131,7 +131,8 @@ footer a:hover { text-decoration: underline; }
     <!-- PLAYER -->
     <section id="player-section">
       <div class="player-wrap">
-        <iframe id="player-frame" src="" allowfullscreen></iframe>
+        <iframe id="player-frame" src="" allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
       </div>
       <div class="player-controls">
         <div>
@@ -203,7 +204,7 @@ let currentLang = 'dub';
 let currentTitle = '';
 
 // ── AD SUPPRESSION ──────────────────────────────────────────────────────────
-// Kill any popup/new-tab the iframe tries to open
+// Kill any popup/new-tab the iframe tries to open (parent-level)
 window.open = function() { return null; };
 
 // Kill any attempt by the iframe to navigate the top-level page
@@ -211,6 +212,23 @@ window.addEventListener('beforeunload', function(e) {
   e.preventDefault();
   e.returnValue = '';
 }, { capture: true });
+
+// When the iframe opens a popup on click, our page loses focus.
+// Detect that and immediately snap focus back — popup gets buried in the background.
+let playerClicked = false;
+document.addEventListener('mousedown', function(e) {
+  const wrap = document.querySelector('.player-wrap');
+  if (wrap && wrap.contains(e.target)) {
+    playerClicked = true;
+    setTimeout(function() { playerClicked = false; }, 1000);
+  }
+});
+window.addEventListener('blur', function() {
+  if (playerClicked) {
+    setTimeout(function() { window.focus(); }, 50);
+    playerClicked = false;
+  }
+});
 // ────────────────────────────────────────────────────────────────────────────
 
 function getUrl(mal, ep, lang) {
