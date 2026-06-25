@@ -77,6 +77,10 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 .mal-row input { flex: 1; min-width: 120px; padding: 10px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; }
 .mal-row input:focus { border-color: var(--accent); }
 
+/* EMPTY STATE */
+.empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 15px; }
+.empty .icon { font-size: 40px; margin-bottom: 1rem; }
+
 /* QUICK IDS */
 .quick-ids { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
 .quick-chip { padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--text); }
@@ -179,7 +183,7 @@ footer a:hover { text-decoration: underline; }
   </main>
 
   <footer>
-    Powered by TryEmbed. Clean, optimized streaming with automatic episode tracking.
+    The streaming API I use is free and may serve ads. <strong>I recommend using an adblocker</strong> — I've done what I can to suppress popups and redirects, but some ads inside the player may still appear.
   </footer>
 </div>
 
@@ -194,54 +198,35 @@ let currentEp = 1;
 let currentLang = 'dub';
 let currentTitle = '';
 
-// Local memory cache for MAL -> AniList resolution to minimize API strain on episode skips
-const aniListCache = {};
-
-// ── AD SUPPRESSION FALLBACKS ────────────────────────────────────────────────
+// ── AD SUPPRESSION ──────────────────────────────────────────────────────────
 window.open = function() { return null; };
 
 window.addEventListener('beforeunload', function(e) {
   e.preventDefault();
   e.returnValue = '';
 }, { capture: true });
+
+let playerClicked = false;
+document.addEventListener('mousedown', function(e) {
+  const wrap = document.querySelector('.player-wrap');
+  if (wrap && wrap.contains(e.target)) {
+    playerClicked = true;
+    setTimeout(function() { playerClicked = false; }, 1000);
+  }
+});
+window.addEventListener('blur', function() {
+  if (playerClicked) {
+    setTimeout(function() { window.focus(); }, 50);
+    playerClicked = false;
+  }
+});
 // ────────────────────────────────────────────────────────────────────────────
 
-// Middleware: Async resolution converting MAL ID to AniList ID via GraphQL API
-async function getAnilistId(malId) {
-  const parsedId = parseInt(malId);
-  if (aniListCache[parsedId]) return aniListCache[parsedId];
-
-  const query = `
-    query ($idMal: Int) {
-      Media(idMal: $idMal, type: ANIME) {
-        id
-      }
-    }
-  `;
-
-  try {
-    const response = await fetch('https://graphql.anilist.co', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({ query, variables: { idMal: parsedId } })
-    });
-    const result = await response.json();
-    const aniId = result?.data?.Media?.id;
-    if (aniId) {
-      aniListCache[parsedId] = aniId;
-      return aniId;
-    }
-    return null;
-  } catch (err) {
-    console.error("AniList Resolution Error:", err);
-    return null;
-  }
+function getUrl(mal, ep, lang) {
+  return `https://megaplay.buzz/stream/mal/${mal}/${ep}/${lang}`;
 }
 
-async function loadPlayer(mal, ep, lang, title) {
+function loadPlayer(mal, ep, lang, title) {
   mal = parseInt(mal);
   ep = parseInt(ep) || 1;
   currentMal = mal;
@@ -249,25 +234,13 @@ async function loadPlayer(mal, ep, lang, title) {
   currentLang = lang || 'dub';
   currentTitle = title || `MAL #${mal}`;
 
-  // Instantly reflect state changes in UI while resolving ID in background
+  document.getElementById('player-frame').src = getUrl(mal, ep, currentLang);
   document.getElementById('player-section').classList.add('active');
-  document.getElementById('now-playing-title').textContent = "Resolving Stream Link...";
+  document.getElementById('now-playing-title').textContent = currentTitle;
   document.getElementById('now-playing-ep').textContent = `Episode ${ep}`;
   document.getElementById('ep-input').value = ep;
   document.getElementById('lang-dub').className = currentLang === 'dub' ? 'active' : '';
   document.getElementById('lang-sub').className = currentLang === 'sub' ? 'active' : '';
-
-  const aniListId = await getAnilistId(mal);
-  
-  if (!aniListId) {
-    toast('Error: Could not locate show mapping on AniList');
-    document.getElementById('now-playing-title').textContent = "Playback Failed";
-    return;
-  }
-
-  // Construct target TryEmbed URL
-  document.getElementById('player-frame').src = `https://tryembed.us.cc/embed/anime/${aniListId}/${ep}/${currentLang}`;
-  document.getElementById('now-playing-title').textContent = currentTitle;
 
   saveContinue(mal, ep, currentTitle);
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -298,6 +271,8 @@ function goToEp() {
 
 function setLang(lang) {
   currentLang = lang;
+  document.getElementById('lang-dub').className = lang === 'dub' ? 'active' : '';
+  document.getElementById('lang-sub').className = lang === 'sub' ? 'active' : '';
   loadPlayer(currentMal, currentEp, lang, currentTitle);
 }
 
@@ -323,7 +298,7 @@ function renderContinue() {
   if (!cw.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   grid.innerHTML = cw.map(item => `
-    <div class="card" onclick="loadPlayer(${item.mal}, ${item.ep}, '${currentLang}', '${escHtml(item.title)}')">
+    <div class="card" onclick="loadPlayer(${item.mal}, ${item.ep}, '${escHtml(item.title)}')">
       <button class="card-remove" onclick="event.stopPropagation(); removeContinue(${item.mal})">✕</button>
       <div class="card-ep">EP ${item.ep}</div>
       <div class="card-title">${escHtml(item.title)}</div>
@@ -357,7 +332,7 @@ function renderWatchlist() {
   if (!wl.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   grid.innerHTML = wl.map(item => `
-    <div class="card" onclick="loadPlayer(${item.mal}, 1, '${currentLang}', '${escHtml(item.title)}')">
+    <div class="card" onclick="loadPlayer(${item.mal}, 1, '${escHtml(item.title)}')">
       <button class="card-remove" onclick="event.stopPropagation(); removeWatchlist(${item.mal})">✕</button>
       <div class="card-title">${escHtml(item.title)}</div>
       <div class="card-sub">MAL #${item.mal}</div>
@@ -372,7 +347,7 @@ function removeWatchlist(mal) {
   renderWatchlist();
 }
 
-// SEARCH
+// SEARCH — opens MAL search
 document.getElementById('search-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const q = e.target.value.trim();
@@ -380,6 +355,7 @@ document.getElementById('search-input').addEventListener('keydown', e => {
   }
 });
 
+// TOAST
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -392,22 +368,26 @@ function escHtml(s) {
   return String(s).replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// TRYEMBED POSTMESSAGE LISTENER (Auto-Next Integration)
+// AUTO NEXT
 window.addEventListener('message', function(event) {
-  // Supports TryEmbed native playback state indicators
   let data = event.data;
   if (typeof data === 'string') {
     try { data = JSON.parse(data); } catch(e) { return; }
   }
-  
-  // Handles generic standard media events passed up from root window streams
-  if ((data.event === 'complete' || data.event === 'ended') && currentMal) {
-    toast('Episode finished! Switching to next... ▶');
+  if (data.event === 'complete' && currentMal) {
+    toast('Episode complete! Loading next... ▶');
     setTimeout(() => skipEp(1), 1500);
+  }
+  if (data.event === 'time' && currentMal) {
+    saveContinue(currentMal, currentEp, currentTitle);
   }
 });
 
 // INIT
+renderContinue();
+renderWatchlist();
+document.getElementById('continue-section').style.display = 'none';
+document.getElementById('watchlist-section').style.display = 'none';
 renderContinue();
 renderWatchlist();
 </script>
