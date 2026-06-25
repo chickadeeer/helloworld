@@ -11,6 +11,20 @@
     </style>
 </head>
 <body>
-    <iframe src="indexx.html" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups"></iframe>
+    <iframe src="indexx.html" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-top-navigation"></iframe>
+
+    <script>
+        // FIREWALL TRIPWIRE: Because we allowed top-navigation to trick the player,
+        // we use this listener to intercept and block malicious redirects.
+        window.addEventListener('beforeunload', function (e) {
+            // Cancel the event to force the browser to show a confirmation dialog
+            e.preventDefault();
+            
+            // Standard fallback string for older browser engines
+            const warningMessage = 'An ad is trying to redirect you away from your anime. Click Stay/Cancel to block it!';
+            e.returnValue = warningMessage;
+            return warningMessage;
+        });
+    </script>
 </body>
 </html>
