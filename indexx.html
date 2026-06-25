@@ -128,11 +128,10 @@ footer a:hover { text-decoration: underline; }
   </header>
 
   <main>
-    <!-- PLAYER -->
     <section id="player-section">
       <div class="player-wrap">
         <iframe id="player-frame" src="" allowfullscreen
-          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-top-navigation allow-popups"></iframe>
       </div>
       <div class="player-controls">
         <div>
@@ -153,7 +152,6 @@ footer a:hover { text-decoration: underline; }
       </div>
     </section>
 
-    <!-- LOAD BY MAL ID -->
     <div class="section-title">Load Anime</div>
     <div class="mal-row">
       <input type="number" id="mal-input" placeholder="MAL ID (e.g. 813)" />
@@ -174,13 +172,11 @@ footer a:hover { text-decoration: underline; }
 
     <div class="divider"></div>
 
-    <!-- CONTINUE WATCHING -->
     <div id="continue-section">
       <div class="section-title">Continue Watching</div>
       <div class="grid" id="continue-grid"></div>
     </div>
 
-    <!-- WATCHLIST -->
     <div id="watchlist-section">
       <div class="section-title">Watchlist</div>
       <div class="grid" id="watchlist-grid"></div>
@@ -204,17 +200,13 @@ let currentLang = 'dub';
 let currentTitle = '';
 
 // ── AD SUPPRESSION ──────────────────────────────────────────────────────────
-// Kill any popup/new-tab the iframe tries to open (parent-level)
 window.open = function() { return null; };
 
-// Kill any attempt by the iframe to navigate the top-level page
 window.addEventListener('beforeunload', function(e) {
   e.preventDefault();
   e.returnValue = '';
 }, { capture: true });
 
-// When the iframe opens a popup on click, our page loses focus.
-// Detect that and immediately snap focus back — popup gets buried in the background.
 let playerClicked = false;
 document.addEventListener('mousedown', function(e) {
   const wrap = document.querySelector('.player-wrap');
