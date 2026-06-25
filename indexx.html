@@ -104,6 +104,18 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 #toast.show { transform: translateX(-50%) translateY(0); }
 
 .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+/* FOOTER NOTICE */
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 13px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  line-height: 1.6;
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -119,7 +131,14 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
     <!-- PLAYER -->
     <section id="player-section">
       <div class="player-wrap">
-        <iframe id="player-frame" src="" allowfullscreen></iframe>
+        <iframe
+          id="player-frame"
+          src=""
+          allowfullscreen
+          allow="autoplay; fullscreen; picture-in-picture"
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+          referrerpolicy="no-referrer"
+        ></iframe>
       </div>
       <div class="player-controls">
         <div>
@@ -173,6 +192,10 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
       <div class="grid" id="watchlist-grid"></div>
     </div>
   </main>
+
+  <footer>
+    The streaming API I use is free and may serve ads. <strong>I recommend using an adblocker</strong> — I've done what I can to suppress popups and redirects, but some ads inside the player may still appear.
+  </footer>
 </div>
 
 <div id="toast"></div>
@@ -185,6 +208,17 @@ let currentMal = null;
 let currentEp = 1;
 let currentLang = 'dub';
 let currentTitle = '';
+
+// ── AD SUPPRESSION ──────────────────────────────────────────────────────────
+// Kill any popup/new-tab the iframe tries to open
+window.open = function() { return null; };
+
+// Kill any attempt by the iframe to navigate the top-level page
+window.addEventListener('beforeunload', function(e) {
+  e.preventDefault();
+  e.returnValue = '';
+}, { capture: true });
+// ────────────────────────────────────────────────────────────────────────────
 
 function getUrl(mal, ep, lang) {
   return `https://megaplay.buzz/stream/mal/${mal}/${ep}/${lang}`;
@@ -262,7 +296,7 @@ function renderContinue() {
   if (!cw.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   grid.innerHTML = cw.map(item => `
-    <div class="card" onclick="loadPlayer(${item.mal}, ${item.ep}, '${currentLang}', '${escHtml(item.title)}')">
+    <div class="card" onclick="loadPlayer(${item.mal}, ${item.ep}, '${escHtml(item.title)}')">
       <button class="card-remove" onclick="event.stopPropagation(); removeContinue(${item.mal})">✕</button>
       <div class="card-ep">EP ${item.ep}</div>
       <div class="card-title">${escHtml(item.title)}</div>
@@ -296,7 +330,7 @@ function renderWatchlist() {
   if (!wl.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   grid.innerHTML = wl.map(item => `
-    <div class="card" onclick="loadPlayer(${item.mal}, 1, '${currentLang}', '${escHtml(item.title)}')">
+    <div class="card" onclick="loadPlayer(${item.mal}, 1, '${escHtml(item.title)}')">
       <button class="card-remove" onclick="event.stopPropagation(); removeWatchlist(${item.mal})">✕</button>
       <div class="card-title">${escHtml(item.title)}</div>
       <div class="card-sub">MAL #${item.mal}</div>
@@ -332,17 +366,11 @@ function escHtml(s) {
   return String(s).replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// AUTO NEXT via postMessage (megaplay sends 'complete' event)
+// AUTO NEXT
 window.addEventListener('message', function(event) {
   let data = event.data;
   if (typeof data === 'string') {
     try { data = JSON.parse(data); } catch(e) { return; }
-  }
-  if (data.channel === 'megacloud' || data.type === 'watching-log') {
-    // update continue watching with current time
-    if (data.type === 'watching-log' && currentMal) {
-      saveContinue(currentMal, currentEp, currentTitle);
-    }
   }
   if (data.event === 'complete' && currentMal) {
     toast('Episode complete! Loading next... ▶');
