@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sure Thing!</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #0a0a0f;
@@ -22,16 +22,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* LAYOUT */
 #app { display: flex; flex-direction: column; min-height: 100vh; }
-header { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
+header { display: flex; align-items: center; gap: 1.5rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
 .logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.search-wrap { flex: 1; max-width: 400px; position: relative; }
+
+.search-wrap { flex: 1; max-width: 400px; position: relative; margin-left: auto; }
 #search-input { width: 100%; padding: 10px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; }
 #search-input:focus { border-color: var(--accent); }
 #search-input::placeholder { color: var(--muted); }
 
 main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
 
-/* PLAYER - Raw iframe context to keep Megaplay happy */
+/* PLAYER */
 #player-section { display: none; margin-bottom: 2rem; }
 #player-section.active { display: block; }
 .player-wrap { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
@@ -45,7 +46,6 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 .btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
 .btn:active { transform: scale(0.97); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
-.btn.primary:hover { background: #cc2e2e; color: #fff; }
 .btn.icon { padding: 10px 14px; font-size: 18px; }
 
 /* LANG TOGGLE */
@@ -84,8 +84,8 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 
 /* RESPONSIVE */
 @media (max-width: 600px) {
-  header { flex-wrap: wrap; }
-  .search-wrap { max-width: 100%; width: 100%; }
+  header { flex-wrap: wrap; gap: 0.8rem; }
+  .search-wrap { max-width: 100%; width: 100%; margin-left: 0; }
   .player-controls { gap: 8px; }
   .now-playing { font-size: 18px; }
 }
@@ -101,14 +101,16 @@ main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;
 
 .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
 
-footer {
-  text-align: center;
-  padding: 1.5rem;
-  font-size: 13px;
-  color: var(--muted);
-  border-top: 1px solid var(--border);
-  line-height: 1.6;
+footer { text-align: center; padding: 1.5rem; font-size: 13px; color: var(--muted); border-top: 1px solid var(--border); line-height: 1.6; }
+
+/* RAW DEBUG PANEL */
+#debug-panel {
+  display: none; position: fixed; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85);
+  color: #0f0; font-family: monospace; font-size: 12px; padding: 15px; border: 1px solid #0f0;
+  z-index: 9999; pointer-events: none; white-space: pre; text-transform: uppercase;
 }
+#debug-panel.active { display: block; }
+#debug-panel span { color: #fff; }
 </style>
 </head>
 <body>
@@ -121,6 +123,7 @@ footer {
   </header>
 
   <main>
+    <!-- VIDEO PLAYER WORKSPACE -->
     <section id="player-section">
       <div class="player-wrap">
         <iframe id="player-frame" src="" allowfullscreen></iframe>
@@ -144,6 +147,7 @@ footer {
       </div>
     </section>
 
+    <!-- MANUAL STREAM ENGAGEMENT -->
     <div class="section-title">Load Anime</div>
     <div class="mal-row">
       <input type="number" id="mal-input" placeholder="MAL ID (e.g. 813)" />
@@ -151,6 +155,7 @@ footer {
       <button class="btn primary" onclick="loadFromInput()">▶ Play</button>
     </div>
 
+    <!-- QUICK PRESETS -->
     <div class="quick-ids">
       <div class="quick-chip" onclick="quickLoad(813,'Dragon Ball Z')">Dragon Ball Z</div>
       <div class="quick-chip" onclick="quickLoad(30694,'Dragon Ball Super')">DB Super</div>
@@ -164,6 +169,7 @@ footer {
 
     <div class="divider"></div>
 
+    <!-- PERSISTENT HUB SECTIONS -->
     <div id="continue-section">
       <div class="section-title">Continue Watching</div>
       <div class="grid" id="continue-grid"></div>
@@ -182,6 +188,17 @@ footer {
 
 <div id="toast"></div>
 
+<!-- HIDDEN DEBUG OVERLAY -->
+<div id="debug-panel">
+SYS_DEBUG // ACTIVE
+-------------------
+ADS BLOCKED : <span id="dbg-ads">0</span>
+MAL TARGET  : <span id="dbg-mal">NULL</span>
+EPISODE     : <span id="dbg-ep">NULL</span>
+LANGUAGE    : <span id="dbg-lang">NULL</span>
+FRAME_SRC   : <span id="dbg-src">NULL</span>
+</div>
+
 <script>
 const STORAGE_KEY_CW = 'anistream_continue';
 const STORAGE_KEY_WL = 'anistream_watchlist';
@@ -190,24 +207,42 @@ let currentMal = null;
 let currentEp = 1;
 let currentLang = 'dub';
 let currentTitle = '';
+let blockedAdsCount = 0;
 
-// ── SMART AD SUPPRESSION SYSTEM ─────────────────────────────────────────────
-window.open = function() { return null; }; // Destroys parent window popup triggers
+// ── DEBUG KEYLOGGER & AD SUPPRESSION ─────────────────────────────────────────
+let keyBuffer = '';
+window.addEventListener('keydown', (e) => {
+  keyBuffer += e.key;
+  if (keyBuffer.length > 8) keyBuffer = keyBuffer.slice(-8);
+  if (keyBuffer === '15453525') {
+    document.getElementById('debug-panel').classList.toggle('active');
+    keyBuffer = ''; 
+  }
+});
+
+window.open = function() { return null; }; 
 
 window.addEventListener('beforeunload', function(e) {
   e.preventDefault();
   e.returnValue = '';
 }, { capture: true });
 
-// FOCUS GUARDIAN: Detects when the user tab loses true global focus via popups
 window.addEventListener('blur', function() {
   setTimeout(function() {
     if (!document.hasFocus()) {
-      window.focus(); // Snatch window right back to the application viewport
-      toast('Popup blocked & minimized 🛡️');
+      window.focus(); 
+      blockedAdsCount++;
+      document.getElementById('dbg-ads').textContent = blockedAdsCount;
     }
   }, 100);
 });
+
+function updateDebug() {
+  document.getElementById('dbg-mal').textContent = currentMal || 'NULL';
+  document.getElementById('dbg-ep').textContent = currentEp;
+  document.getElementById('dbg-lang').textContent = currentLang;
+  document.getElementById('dbg-src').textContent = document.getElementById('player-frame').src || 'NULL';
+}
 // ────────────────────────────────────────────────────────────────────────────
 
 function getUrl(mal, ep, lang) {
@@ -230,6 +265,7 @@ function loadPlayer(mal, ep, lang, title) {
   document.getElementById('lang-dub').className = currentLang === 'dub' ? 'active' : '';
   document.getElementById('lang-sub').className = currentLang === 'sub' ? 'active' : '';
 
+  updateDebug();
   saveContinue(mal, ep, currentTitle);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -265,9 +301,9 @@ function setLang(lang) {
 function closePlayer() {
   document.getElementById('player-section').classList.remove('active');
   document.getElementById('player-frame').src = '';
+  updateDebug();
 }
 
-// STORAGE DATA LAYER
 function saveContinue(mal, ep, title) {
   let cw = JSON.parse(localStorage.getItem(STORAGE_KEY_CW) || '[]');
   cw = cw.filter(x => x.mal !== mal);
@@ -332,7 +368,6 @@ function removeWatchlist(mal) {
   renderWatchlist();
 }
 
-// SEARCH ENGAGEMENT
 document.getElementById('search-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const q = e.target.value.trim();
@@ -352,7 +387,6 @@ function escHtml(s) {
   return String(s).replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// MEG PLAY POSTMESSAGE SYSTEM
 window.addEventListener('message', function(event) {
   let data = event.data;
   if (typeof data === 'string') {
@@ -364,7 +398,6 @@ window.addEventListener('message', function(event) {
   }
 });
 
-// INITIALIZE CORE COMPONENTS
 renderContinue();
 renderWatchlist();
 </script>
