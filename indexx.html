@@ -3,403 +3,832 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sure Thing!</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>OmniAnime</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0a0f;
-  --surface: #13131a;
-  --surface2: #1c1c26;
-  --accent: #3c8fff;
-  --accent2: #3cdfff;
-  --text: #f0f0f8;
-  --muted: #6b6b80;
-  --border: rgba(255,255,255,0.07);
-  --radius: 10px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
-
-/* LAYOUT */
-#app { display: flex; flex-direction: column; min-height: 100vh; }
-header { display: flex; align-items: center; gap: 1.5rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
-.logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-.search-wrap { flex: 1; max-width: 400px; position: relative; margin-left: auto; }
-#search-input { width: 100%; padding: 10px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; }
-#search-input:focus { border-color: var(--accent); }
-#search-input::placeholder { color: var(--muted); }
-
-main { flex: 1; padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
-
-/* PLAYER */
-#player-section { display: none; margin-bottom: 2rem; }
-#player-section.active { display: block; }
-.player-wrap { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-.player-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
-
-.player-controls { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-.now-playing { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; flex: 1; min-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ep-label { font-size: 13px; color: var(--muted); }
-
-.btn { padding: 10px 20px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-.btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
-.btn:active { transform: scale(0.97); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
-.btn.icon { padding: 10px 14px; font-size: 18px; }
-
-/* LANG TOGGLE */
-.lang-toggle { display: flex; background: var(--surface2); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
-.lang-toggle button { padding: 8px 16px; border: none; background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.15s; }
-.lang-toggle button.active { background: var(--accent); color: #fff; }
-
-/* EP PICKER */
-.ep-picker { display: flex; align-items: center; gap: 8px; }
-.ep-picker input { width: 70px; padding: 9px; text-align: center; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; }
-.ep-picker input:focus { border-color: var(--accent); }
-
-/* SECTIONS */
-.section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: var(--muted); margin-bottom: 1rem; text-transform: uppercase; }
-
-/* CARDS GRID */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 2rem; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; cursor: pointer; transition: all 0.2s; position: relative; }
-.card:hover { border-color: var(--accent); transform: translateY(-2px); }
-.card-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; line-height: 1.3; }
-.card-sub { font-size: 12px; color: var(--muted); }
-.card-ep { position: absolute; top: 8px; right: 8px; background: var(--accent); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 999px; font-weight: 500; }
-.card-remove { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); border: none; color: var(--muted); font-size: 16px; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; line-height: 1; }
-.card:hover .card-remove { display: flex; }
-.card-remove:hover { color: var(--accent); }
-
-/* MAL SEARCH */
-.mal-row { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.mal-row input { flex: 1; min-width: 120px; padding: 10px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; }
-.mal-row input:focus { border-color: var(--accent); }
-
-/* QUICK IDS */
-.quick-ids { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.quick-chip { padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--text); }
-.quick-chip:hover { border-color: var(--accent); color: var(--accent); }
-
-/* RESPONSIVE */
-@media (max-width: 600px) {
-  header { flex-wrap: wrap; gap: 0.8rem; }
-  .search-wrap { max-width: 100%; width: 100%; margin-left: 0; }
-  .player-controls { gap: 8px; }
-  .now-playing { font-size: 18px; }
+  --bg:       #0f0f0f;
+  --surface:  #181818;
+  --surface2: #212121;
+  --surface3: #2d2d2d;
+  --purple:   #9D6BFF;
+  --teal:     #35E0C5;
+  --grad:     linear-gradient(135deg, #9D6BFF, #35E0C5);
+  --text:     #f1f1f1;
+  --muted:    #909090;
+  --border:   rgba(255,255,255,0.08);
+  --radius:   10px;
+  --sidebar:  240px;
+  --sidebar-sm: 70px;
+  --hdr:      56px;
 }
 
-/* SCROLLBAR */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden}
 
-/* TOAST */
-#toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 999px; font-size: 14px; transition: transform 0.3s; z-index: 999; pointer-events: none; white-space: nowrap; }
-#toast.show { transform: translateX(-50%) translateY(0); }
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
 
-.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+/* ── LAYOUT ── */
+#app{display:flex;min-height:100vh}
 
-footer { text-align: center; padding: 1.5rem; font-size: 13px; color: var(--muted); border-top: 1px solid var(--border); line-height: 1.6; }
-
-/* RAW DEBUG PANEL */
-#debug-panel {
-  display: none; position: fixed; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85);
-  color: #0f0; font-family: monospace; font-size: 12px; padding: 15px; border: 1px solid #0f0;
-  z-index: 9999; pointer-events: none; white-space: pre; text-transform: uppercase;
+/* ── SIDEBAR ── */
+#sidebar{
+  position:fixed;left:0;top:0;
+  width:var(--sidebar);height:100vh;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+  z-index:200;
+  transition:width .2s ease;
+  border-right:1px solid var(--border);
 }
-#debug-panel.active { display: block; }
-#debug-panel span { color: #fff; }
+#sidebar.slim{width:var(--sidebar-sm)}
+
+.s-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;height:var(--hdr);
+  cursor:pointer;flex-shrink:0;
+  text-decoration:none;
+}
+.s-logo svg{width:34px;height:34px;flex-shrink:0}
+.s-logo-name{
+  font-size:17px;font-weight:700;letter-spacing:-.3px;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  white-space:nowrap;
+}
+#sidebar.slim .s-logo-name{display:none}
+
+.nav-group{padding:6px 0;border-bottom:1px solid var(--border)}
+.nav-group-label{
+  padding:8px 20px 3px;
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.7px;
+  color:var(--muted);
+}
+#sidebar.slim .nav-group-label{display:none}
+
+.nav-item{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 16px;margin:1px 6px;
+  border-radius:8px;cursor:pointer;
+  font-size:14px;font-weight:500;color:var(--muted);
+  transition:all .15s;white-space:nowrap;
+  user-select:none;
+}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--surface2);color:var(--text)}
+.nav-item.active .nav-icon{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-icon{font-size:18px;width:22px;text-align:center;flex-shrink:0;line-height:1}
+.nav-label{overflow:hidden}
+#sidebar.slim .nav-label{display:none}
+#sidebar.slim .nav-item{justify-content:center;padding:11px;margin:1px 4px}
+
+/* ── MAIN ── */
+#main{
+  margin-left:var(--sidebar);
+  flex:1;display:flex;flex-direction:column;min-height:100vh;
+  transition:margin-left .2s ease;
+}
+#main.slim{margin-left:var(--sidebar-sm)}
+
+/* ── HEADER ── */
+#hdr{
+  height:var(--hdr);position:sticky;top:0;z-index:100;
+  background:rgba(15,15,15,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+}
+#hamburger{
+  background:none;border:none;color:var(--text);
+  font-size:20px;cursor:pointer;padding:8px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;
+}
+#hamburger:hover{background:var(--surface2)}
+
+.search-bar{display:flex;flex:1;max-width:580px;margin:0 auto}
+#q{
+  flex:1;padding:8px 16px;
+  background:var(--surface2);border:1px solid var(--surface3);border-right:none;
+  border-radius:999px 0 0 999px;
+  color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;
+  transition:border-color .2s;
+}
+#q:focus{border-color:var(--purple)}
+#q::placeholder{color:var(--muted)}
+#search-btn{
+  padding:8px 18px;
+  background:var(--surface3);border:1px solid var(--surface3);border-left:none;
+  border-radius:0 999px 999px 0;
+  color:var(--text);cursor:pointer;font-size:15px;
+  transition:background .15s;
+}
+#search-btn:hover{background:var(--surface2)}
+
+/* ── VIEWS ── */
+.view{display:none;padding:20px 24px}
+.view.active{display:block}
+#watch-view.active{display:flex;gap:24px;padding:20px 24px}
+
+/* ── CHIPS ── */
+.chips{
+  display:flex;gap:8px;margin-bottom:20px;
+  overflow-x:auto;padding-bottom:2px;scrollbar-width:none;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  padding:7px 16px;border-radius:999px;
+  background:var(--surface2);border:none;
+  color:var(--text);font-size:13px;font-weight:500;
+  cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;
+  transition:all .15s;
+}
+.chip:hover{background:var(--surface3)}
+.chip.active{background:var(--text);color:var(--bg)}
+
+.sec-label{font-size:16px;font-weight:600;margin-bottom:14px}
+
+/* ── ANIME GRID ── */
+.anime-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(195px,1fr));
+  gap:16px;margin-bottom:32px;
+}
+
+.acard{
+  cursor:pointer;border-radius:var(--radius);overflow:hidden;
+  background:var(--surface);transition:transform .2s;
+}
+.acard:hover{transform:translateY(-3px)}
+.acard:hover .card-ov{opacity:1}
+
+.card-thumb{
+  position:relative;width:100%;aspect-ratio:2/3;overflow:hidden;
+  background:var(--surface2);
+}
+.card-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.acard:hover .card-thumb img{transform:scale(1.04)}
+.card-ov{
+  position:absolute;inset:0;background:rgba(0,0,0,.55);
+  opacity:0;transition:opacity .2s;
+  display:flex;align-items:center;justify-content:center;
+}
+.play-ring{
+  width:52px;height:52px;border-radius:50%;
+  background:rgba(157,107,255,.9);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+}
+.badge{
+  position:absolute;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:999px;
+  background:rgba(0,0,0,.72);
+}
+.badge.score{bottom:6px;right:6px;color:var(--teal)}
+.badge.eps{bottom:6px;left:6px;color:var(--muted)}
+.badge.rank{top:6px;left:6px;
+  background:var(--grad);color:#fff;
+  -webkit-background-clip:unset;-webkit-text-fill-color:unset;
+}
+
+.card-info{padding:10px 12px 12px}
+.card-title{
+  font-size:13px;font-weight:600;line-height:1.35;margin-bottom:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-meta{font-size:12px;color:var(--muted)}
+
+/* ── SKELETON ── */
+.skel{
+  border-radius:var(--radius);
+  background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{aspect-ratio:2/3}
+
+/* ── WATCH VIEW ── */
+.player-col{flex:1;min-width:0}
+.player-wrap{
+  position:relative;width:100%;aspect-ratio:16/9;
+  background:#000;border-radius:var(--radius);overflow:hidden;
+}
+.player-wrap iframe{width:100%;height:100%;border:none;display:block}
+
+.watch-title{font-size:19px;font-weight:700;margin:14px 0 4px;line-height:1.2}
+.watch-sub{font-size:13px;color:var(--muted);margin-bottom:12px}
+
+.w-controls{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  margin-bottom:12px;
+}
+.ep-nav{display:flex;align-items:center;gap:6px}
+.ep-nav input{
+  width:58px;padding:7px;text-align:center;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:14px;
+  font-family:'Inter',sans-serif;outline:none;
+}
+.ep-nav input:focus{border-color:var(--purple)}
+.cbtn{
+  padding:8px 14px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.cbtn:hover{background:var(--surface3)}
+.cbtn.icon-only{padding:8px 11px}
+
+.lang-tog{
+  display:flex;background:var(--surface2);
+  border-radius:999px;border:1px solid var(--border);overflow:hidden;
+}
+.lang-tog button{
+  padding:7px 14px;border:none;background:transparent;
+  color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.lang-tog button.active{
+  background:var(--grad);color:#fff;border-radius:999px;
+  /* override -webkit for button text */
+  -webkit-background-clip:unset;-webkit-text-fill-color:#fff;
+}
+
+.wl-btn{
+  margin-left:auto;padding:8px 18px;
+  background:var(--grad);border:none;border-radius:999px;
+  color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  -webkit-background-clip:unset;-webkit-text-fill-color:#fff;
+}
+
+/* ── RELATED PANEL ── */
+.related-col{width:350px;flex-shrink:0}
+.related-hdr{font-size:15px;font-weight:600;margin-bottom:12px}
+
+.rel-card{
+  display:flex;gap:10px;padding:8px;cursor:pointer;border-radius:8px;
+  transition:background .15s;margin-bottom:2px;
+}
+.rel-card:hover{background:var(--surface2)}
+.rel-thumb{
+  width:130px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;flex-shrink:0;
+  background:var(--surface2);
+}
+.rel-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.rel-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding-top:2px}
+.rel-name{
+  font-size:13px;font-weight:600;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.rel-meta{font-size:11px;color:var(--muted)}
+
+/* ── MANUAL FORM ── */
+.manual-wrap{max-width:480px}
+.manual-wrap h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.manual-wrap p{font-size:13px;color:var(--muted);margin-bottom:18px}
+.field{
+  width:100%;padding:10px 14px;margin-bottom:10px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;
+}
+.field:focus{border-color:var(--purple)}
+.play-btn{
+  width:100%;padding:12px;background:var(--grad);border:none;border-radius:8px;
+  color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;
+  -webkit-background-clip:unset;-webkit-text-fill-color:#fff;
+}
+
+/* ── QUICK CHIPS (manual section) ── */
+.quick-chips{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 20px}
+.quick-chip{
+  padding:6px 14px;background:var(--surface);border:1px solid var(--border);
+  border-radius:999px;font-size:13px;cursor:pointer;transition:all .15s;color:var(--text);
+  font-family:'Inter',sans-serif;
+}
+.quick-chip:hover{border-color:var(--purple);color:var(--purple)}
+
+/* ── SAVED GRID ── */
+.saved-section{margin-bottom:32px}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1/-1}
+.empty-icon{font-size:44px;margin-bottom:12px}
+.empty h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.empty p{font-size:13px}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:1.8rem;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--surface3);border:1px solid var(--border);
+  color:var(--text);padding:10px 22px;border-radius:999px;
+  font-size:13px;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── DEBUG ── */
+#dbg{
+  display:none;position:fixed;top:8px;right:8px;
+  background:rgba(0,0,0,.9);color:#9D6BFF;
+  font-family:monospace;font-size:11px;padding:12px;
+  border:1px solid #9D6BFF;z-index:9999;pointer-events:none;white-space:pre;
+}
+#dbg.on{display:block}
+#dbg span{color:#35E0C5}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  #watch-view.active{flex-direction:column}
+  .related-col{width:100%}
+}
+@media(max-width:640px){
+  #sidebar{width:var(--sidebar-sm)}
+  #sidebar .nav-label,#sidebar .s-logo-name,#sidebar .nav-group-label{display:none}
+  #sidebar .nav-item{justify-content:center;padding:11px;margin:1px 4px}
+  #main{margin-left:var(--sidebar-sm)}
+  #main.slim{margin-left:var(--sidebar-sm)}
+  .view{padding:12px}
+  #watch-view.active{padding:12px}
+  .anime-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+}
 </style>
 </head>
 <body>
 <div id="app">
-  <header>
-    <div class="logo">Sure Thing!</div>
-    <div class="search-wrap">
-      <input id="search-input" type="text" placeholder="Search anime name... (opens MAL)" />
-    </div>
-  </header>
 
-  <main>
-    <!-- VIDEO PLAYER WORKSPACE -->
-    <section id="player-section">
-      <div class="player-wrap">
-        <iframe id="player-frame" src="" allowfullscreen></iframe>
+  <!-- ── SIDEBAR ── -->
+  <aside id="sidebar">
+    <div class="s-logo" onclick="goHome()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+        <defs>
+          <linearGradient id="lg" x1="18%" y1="10%" x2="82%" y2="90%">
+            <stop offset="0%" stop-color="#9D6BFF"/>
+            <stop offset="100%" stop-color="#35E0C5"/>
+          </linearGradient>
+        </defs>
+        <rect width="256" height="256" rx="54" fill="#0E1118"/>
+        <g fill="url(#lg)">
+          <path d="M128 42 L167 74 L158 118 L196 136 L170 183 L121 198 L78 173 L60 123 L88 80Z"/>
+          <path fill="#0E1118" d="M126 78 L147 95 L141 120 L161 131 L147 157 L122 165 L100 152 L91 126 L106 101Z"/>
+          <circle cx="180" cy="77" r="9"/>
+          <circle cx="69" cy="181" r="7"/>
+        </g>
+      </svg>
+      <span class="s-logo-name">OmniAnime</span>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-item active" data-nav="home" onclick="goHome()">
+        <span class="nav-icon">⊞</span><span class="nav-label">Home</span>
       </div>
-      <div class="player-controls">
-        <div>
-          <div class="now-playing" id="now-playing-title">—</div>
-          <div class="ep-label" id="now-playing-ep">Episode 1</div>
-        </div>
-        <div class="ep-picker">
-          <button class="btn icon" onclick="skipEp(-1)" title="Previous episode">←</button>
-          <input type="number" id="ep-input" value="1" min="1" max="9999" onchange="goToEp()" />
-          <button class="btn icon" onclick="skipEp(1)" title="Next episode">→</button>
-        </div>
-        <div class="lang-toggle">
-          <button id="lang-dub" class="active" onclick="setLang('dub')">DUB</button>
-          <button id="lang-sub" onclick="setLang('sub')">SUB</button>
-        </div>
-        <button class="btn" onclick="saveToWatchlist()">+ Watchlist</button>
-        <button class="btn" onclick="closePlayer()">✕ Close</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Browse</div>
+      <div class="nav-item" data-nav="tv" onclick="browseCategory('tv','Top TV Series')">
+        <span class="nav-icon">◫</span><span class="nav-label">TV Series</span>
       </div>
-    </section>
-
-    <!-- MANUAL STREAM ENGAGEMENT -->
-    <div class="section-title">Load Anime</div>
-    <div class="mal-row">
-      <input type="number" id="mal-input" placeholder="MAL ID (e.g. 813)" />
-      <input type="text" id="name-input" placeholder="Anime name (optional)" />
-      <button class="btn primary" onclick="loadFromInput()">▶ Play</button>
+      <div class="nav-item" data-nav="ova" onclick="browseCategory('ova','Top OVA')">
+        <span class="nav-icon">◎</span><span class="nav-label">OVA</span>
+      </div>
+      <div class="nav-item" data-nav="movie" onclick="browseCategory('movie','Movies')">
+        <span class="nav-icon">◈</span><span class="nav-label">Movies</span>
+      </div>
+      <div class="nav-item" data-nav="special" onclick="browseCategory('special','Specials')">
+        <span class="nav-icon">✦</span><span class="nav-label">Specials</span>
+      </div>
     </div>
 
-    <!-- QUICK PRESETS -->
-    <div class="quick-ids">
-      <div class="quick-chip" onclick="quickLoad(813,'Dragon Ball Z')">Dragon Ball Z</div>
-      <div class="quick-chip" onclick="quickLoad(30694,'Dragon Ball Super')">DB Super</div>
-      <div class="quick-chip" onclick="quickLoad(20,'Naruto')">Naruto</div>
-      <div class="quick-chip" onclick="quickLoad(21,'One Piece')">One Piece</div>
-      <div class="quick-chip" onclick="quickLoad(16498,'Attack on Titan')">Attack on Titan</div>
-      <div class="quick-chip" onclick="quickLoad(1,'Cowboy Bebop')">Cowboy Bebop</div>
-      <div class="quick-chip" onclick="quickLoad(5114,'FMA Brotherhood')">FMA Brotherhood</div>
-      <div class="quick-chip" onclick="quickLoad(11061,'Hunter x Hunter')">Hunter x Hunter</div>
+    <div class="nav-group">
+      <div class="nav-group-label">Library</div>
+      <div class="nav-item" data-nav="continue" onclick="showSaved()">
+        <span class="nav-icon">▷</span><span class="nav-label">Continue</span>
+      </div>
+      <div class="nav-item" data-nav="watchlist" onclick="showSaved()">
+        <span class="nav-icon">☰</span><span class="nav-label">Watchlist</span>
+      </div>
     </div>
 
-    <div class="divider"></div>
+    <div class="nav-group">
+      <div class="nav-item" data-nav="manual" onclick="showManual()">
+        <span class="nav-icon">#</span><span class="nav-label">Load by ID</span>
+      </div>
+    </div>
+  </aside>
 
-    <!-- PERSISTENT HUB SECTIONS -->
-    <div id="continue-section">
-      <div class="section-title">Continue Watching</div>
-      <div class="grid" id="continue-grid"></div>
+  <!-- ── MAIN ── -->
+  <div id="main">
+
+    <!-- HEADER -->
+    <header id="hdr">
+      <button id="hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+      <div class="search-bar">
+        <input id="q" type="text" placeholder="Search anime…" autocomplete="off"/>
+        <button id="search-btn" onclick="doSearch()">⌕</button>
+      </div>
+    </header>
+
+    <!-- ── HOME VIEW ── -->
+    <div id="home-view" class="view active">
+      <div class="chips" id="chips">
+        <button class="chip active" data-chip="all"     onclick="chipClick(this,'all','Top Anime')">All</button>
+        <button class="chip"        data-chip="tv"      onclick="chipClick(this,'tv','Top TV Series')">TV Series</button>
+        <button class="chip"        data-chip="ova"     onclick="chipClick(this,'ova','Top OVA')">OVA</button>
+        <button class="chip"        data-chip="movie"   onclick="chipClick(this,'movie','Movies')">Movies</button>
+        <button class="chip"        data-chip="special" onclick="chipClick(this,'special','Specials')">Specials</button>
+        <button class="chip"        data-chip="music"   onclick="chipClick(this,'music','Music Videos')">Music</button>
+      </div>
+      <div class="sec-label" id="grid-label">Top Anime</div>
+      <div class="anime-grid" id="anime-grid"></div>
     </div>
 
-    <div id="watchlist-section">
-      <div class="section-title">Watchlist</div>
-      <div class="grid" id="watchlist-grid"></div>
+    <!-- ── WATCH VIEW ── -->
+    <div id="watch-view" class="view">
+      <div class="player-col">
+        <div class="player-wrap">
+          <iframe id="pframe" src="" allowfullscreen></iframe>
+        </div>
+        <h1 class="watch-title" id="w-title">—</h1>
+        <div class="watch-sub" id="w-sub">Episode 1</div>
+        <div class="w-controls">
+          <div class="ep-nav">
+            <button class="cbtn icon-only" onclick="skipEp(-1)" title="Previous">◂</button>
+            <input type="number" id="ep-in" value="1" min="1" max="9999" onchange="goToEp()"/>
+            <button class="cbtn icon-only" onclick="skipEp(1)" title="Next">▸</button>
+          </div>
+          <div class="lang-tog">
+            <button id="btn-dub" class="active" onclick="setLang('dub')">DUB</button>
+            <button id="btn-sub" onclick="setLang('sub')">SUB</button>
+          </div>
+          <button class="wl-btn" onclick="addToWL()">+ Watchlist</button>
+        </div>
+      </div>
+      <div class="related-col">
+        <div class="related-hdr">Up Next</div>
+        <div id="related"></div>
+      </div>
     </div>
-  </main>
 
-  <footer>
-    Optimized layout featuring continuous stream monitoring.
-  </footer>
-</div>
+    <!-- ── SAVED VIEW ── -->
+    <div id="saved-view" class="view">
+      <div class="saved-section">
+        <div class="sec-label">Continue Watching</div>
+        <div class="anime-grid" id="cw-grid"></div>
+      </div>
+      <div class="saved-section">
+        <div class="sec-label">Watchlist</div>
+        <div class="anime-grid" id="wl-grid"></div>
+      </div>
+    </div>
+
+    <!-- ── MANUAL VIEW ── -->
+    <div id="manual-view" class="view">
+      <div class="manual-wrap">
+        <h2>Load by MAL ID</h2>
+        <p>Enter a MyAnimeList anime ID to stream directly, or pick a quick preset below.</p>
+        <input class="field" type="number" id="mal-in" placeholder="MAL ID (e.g. 813)" />
+        <input class="field" type="text" id="name-in" placeholder="Anime name (optional)" />
+        <button class="play-btn" onclick="loadFromManual()">▶ Play</button>
+        <div class="quick-chips">
+          <div class="quick-chip" onclick="quickLoad(813,'Dragon Ball Z')">Dragon Ball Z</div>
+          <div class="quick-chip" onclick="quickLoad(30694,'Dragon Ball Super')">DB Super</div>
+          <div class="quick-chip" onclick="quickLoad(20,'Naruto')">Naruto</div>
+          <div class="quick-chip" onclick="quickLoad(21,'One Piece')">One Piece</div>
+          <div class="quick-chip" onclick="quickLoad(16498,'Attack on Titan')">Attack on Titan</div>
+          <div class="quick-chip" onclick="quickLoad(1,'Cowboy Bebop')">Cowboy Bebop</div>
+          <div class="quick-chip" onclick="quickLoad(5114,'FMA Brotherhood')">FMA Brotherhood</div>
+          <div class="quick-chip" onclick="quickLoad(11061,'Hunter x Hunter')">Hunter x Hunter</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
 
 <div id="toast"></div>
-
-<!-- HIDDEN DEBUG OVERLAY -->
-<div id="debug-panel">
-SYS_DEBUG // ACTIVE
--------------------
-ADS BLOCKED : <span id="dbg-ads">0</span>
-MAL TARGET  : <span id="dbg-mal">NULL</span>
-EPISODE     : <span id="dbg-ep">NULL</span>
-LANGUAGE    : <span id="dbg-lang">NULL</span>
-FRAME_SRC   : <span id="dbg-src">NULL</span>
+<div id="dbg">
+OMNIANIME // DEBUG
+-----------------
+ADS BLOCKED: <span id="d-ads">0</span>
+MAL ID    : <span id="d-mal">NULL</span>
+EPISODE   : <span id="d-ep">NULL</span>
+LANGUAGE  : <span id="d-lang">NULL</span>
 </div>
 
 <script>
-const STORAGE_KEY_CW = 'anistream_continue';
-const STORAGE_KEY_WL = 'anistream_watchlist';
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const JIKAN   = 'https://api.jikan.moe/v4';
+const CW_KEY  = 'omnianime_cw';
+const WL_KEY  = 'omnianime_wl';
 
-let currentMal = null;
-let currentEp = 1;
-let currentLang = 'dub';
-let currentTitle = '';
-let blockedAdsCount = 0;
+// ── STATE ──────────────────────────────────────────────────────────────────
+let curMal = null, curEp = 1, curLang = 'dub', curTitle = '';
+let slimSidebar = false;
+let cache = {};   // { 'all': [...], 'tv': [...], ... }
+let adsBlocked = 0;
 
-// ── DEBUG KEYLOGGER & AD SUPPRESSION ─────────────────────────────────────────
-let keyBuffer = '';
-window.addEventListener('keydown', (e) => {
-  keyBuffer += e.key;
-  if (keyBuffer.length > 8) keyBuffer = keyBuffer.slice(-8);
-  if (keyBuffer === '15453525') {
-    document.getElementById('debug-panel').classList.toggle('active');
-    keyBuffer = ''; 
-  }
-});
-
-window.open = function() { return null; }; 
-
-window.addEventListener('beforeunload', function(e) {
-  e.preventDefault();
-  e.returnValue = '';
-}, { capture: true });
-
-window.addEventListener('blur', function() {
-  setTimeout(function() {
-    if (!document.hasFocus()) {
-      window.focus(); 
-      blockedAdsCount++;
-      document.getElementById('dbg-ads').textContent = blockedAdsCount;
-    }
+// ── POPUP / FOCUS GUARD ────────────────────────────────────────────────────
+window.open = () => null;
+window.addEventListener('beforeunload', e => { e.preventDefault(); e.returnValue = ''; }, { capture: true });
+window.addEventListener('blur', () => {
+  setTimeout(() => {
+    if (!document.hasFocus()) { window.focus(); adsBlocked++; $('d-ads').textContent = adsBlocked; }
   }, 100);
 });
 
-function updateDebug() {
-  document.getElementById('dbg-mal').textContent = currentMal || 'NULL';
-  document.getElementById('dbg-ep').textContent = currentEp;
-  document.getElementById('dbg-lang').textContent = currentLang;
-  document.getElementById('dbg-src').textContent = document.getElementById('player-frame').src || 'NULL';
-}
-// ────────────────────────────────────────────────────────────────────────────
-
-function getUrl(mal, ep, lang) {
-  return `https://megaplay.buzz/stream/mal/${mal}/${ep}/${lang}`;
-}
-
-function loadPlayer(mal, ep, lang, title) {
-  mal = parseInt(mal);
-  ep = parseInt(ep) || 1;
-  currentMal = mal;
-  currentEp = ep;
-  currentLang = lang || 'dub';
-  currentTitle = title || `MAL #${mal}`;
-
-  document.getElementById('player-frame').src = getUrl(mal, ep, currentLang);
-  document.getElementById('player-section').classList.add('active');
-  document.getElementById('now-playing-title').textContent = currentTitle;
-  document.getElementById('now-playing-ep').textContent = `Episode ${ep}`;
-  document.getElementById('ep-input').value = ep;
-  document.getElementById('lang-dub').className = currentLang === 'dub' ? 'active' : '';
-  document.getElementById('lang-sub').className = currentLang === 'sub' ? 'active' : '';
-
-  updateDebug();
-  saveContinue(mal, ep, currentTitle);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function loadFromInput() {
-  const mal = document.getElementById('mal-input').value;
-  const name = document.getElementById('name-input').value || `MAL #${mal}`;
-  if (!mal) { toast('Enter a MAL ID'); return; }
-  loadPlayer(mal, 1, currentLang, name);
-}
-
-function quickLoad(mal, title) {
-  document.getElementById('mal-input').value = mal;
-  document.getElementById('name-input').value = title;
-  loadPlayer(mal, 1, currentLang, title);
-}
-
-function skipEp(delta) {
-  const newEp = Math.max(1, currentEp + delta);
-  loadPlayer(currentMal, newEp, currentLang, currentTitle);
-}
-
-function goToEp() {
-  const ep = parseInt(document.getElementById('ep-input').value) || 1;
-  loadPlayer(currentMal, ep, currentLang, currentTitle);
-}
-
-function setLang(lang) {
-  currentLang = lang;
-  loadPlayer(currentMal, currentEp, lang, currentTitle);
-}
-
-function closePlayer() {
-  document.getElementById('player-section').classList.remove('active');
-  document.getElementById('player-frame').src = '';
-  updateDebug();
-}
-
-function saveContinue(mal, ep, title) {
-  let cw = JSON.parse(localStorage.getItem(STORAGE_KEY_CW) || '[]');
-  cw = cw.filter(x => x.mal !== mal);
-  cw.unshift({ mal, ep, title, ts: Date.now() });
-  cw = cw.slice(0, 12);
-  localStorage.setItem(STORAGE_KEY_CW, JSON.stringify(cw));
-  renderContinue();
-}
-
-function renderContinue() {
-  const cw = JSON.parse(localStorage.getItem(STORAGE_KEY_CW) || '[]');
-  const grid = document.getElementById('continue-grid');
-  const section = document.getElementById('continue-section');
-  if (!cw.length) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  grid.innerHTML = cw.map(item => `
-    <div class="card" onclick="loadPlayer(${item.mal}, ${item.ep}, '${currentLang}', '${escHtml(item.title)}')">
-      <button class="card-remove" onclick="event.stopPropagation(); removeContinue(${item.mal})">✕</button>
-      <div class="card-ep">EP ${item.ep}</div>
-      <div class="card-title">${escHtml(item.title)}</div>
-      <div class="card-sub">MAL #${item.mal}</div>
-    </div>
-  `).join('');
-}
-
-function removeContinue(mal) {
-  let cw = JSON.parse(localStorage.getItem(STORAGE_KEY_CW) || '[]');
-  cw = cw.filter(x => x.mal !== mal);
-  localStorage.setItem(STORAGE_KEY_CW, JSON.stringify(cw));
-  renderContinue();
-}
-
-function saveToWatchlist() {
-  if (!currentMal) { toast('Nothing playing'); return; }
-  let wl = JSON.parse(localStorage.getItem(STORAGE_KEY_WL) || '[]');
-  if (wl.find(x => x.mal === currentMal)) { toast('Already in watchlist'); return; }
-  wl.unshift({ mal: currentMal, title: currentTitle });
-  localStorage.setItem(STORAGE_KEY_WL, JSON.stringify(wl));
-  renderWatchlist();
-  toast('Added to watchlist ✓');
-}
-
-function renderWatchlist() {
-  const wl = JSON.parse(localStorage.getItem(STORAGE_KEY_WL) || '[]');
-  const grid = document.getElementById('watchlist-grid');
-  const section = document.getElementById('watchlist-section');
-  if (!wl.length) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  grid.innerHTML = wl.map(item => `
-    <div class="card" onclick="loadPlayer(${item.mal}, 1, '${currentLang}', '${escHtml(item.title)}')">
-      <button class="card-remove" onclick="event.stopPropagation(); removeWatchlist(${item.mal})">✕</button>
-      <div class="card-title">${escHtml(item.title)}</div>
-      <div class="card-sub">MAL #${item.mal}</div>
-    </div>
-  `).join('');
-}
-
-function removeWatchlist(mal) {
-  let wl = JSON.parse(localStorage.getItem(STORAGE_KEY_WL) || '[]');
-  wl = wl.filter(x => x.mal !== mal);
-  localStorage.setItem(STORAGE_KEY_WL, JSON.stringify(wl));
-  renderWatchlist();
-}
-
-document.getElementById('search-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const q = e.target.value.trim();
-    if (q) window.open(`https://myanimelist.net/anime.php?q=${encodeURIComponent(q)}&cat=anime`, '_blank');
-  }
+// ── DEBUG KEYCODE ──────────────────────────────────────────────────────────
+let kbuf = '';
+window.addEventListener('keydown', e => {
+  kbuf = (kbuf + e.key).slice(-8);
+  if (kbuf === '15453525') { $('dbg').classList.toggle('on'); kbuf = ''; }
 });
+function syncDebug() {
+  $('d-mal').textContent  = curMal  || 'NULL';
+  $('d-ep').textContent   = curEp;
+  $('d-lang').textContent = curLang;
+}
 
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
 function toast(msg) {
-  const el = document.getElementById('toast');
+  const el = $('toast');
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove('show'), 2500);
 }
-
-function escHtml(s) {
-  return String(s).replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function he(s) {  // HTML-escape for attribute values
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-window.addEventListener('message', function(event) {
-  let data = event.data;
-  if (typeof data === 'string') {
-    try { data = JSON.parse(data); } catch(e) { return; }
+// ── SIDEBAR ────────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  slimSidebar = !slimSidebar;
+  $('sidebar').classList.toggle('slim', slimSidebar);
+  $('main').classList.toggle('slim', slimSidebar);
+}
+function setNav(key) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.nav === key));
+}
+
+// ── VIEWS ──────────────────────────────────────────────────────────────────
+const VIEWS = ['home-view','watch-view','saved-view','manual-view'];
+function showView(id) {
+  VIEWS.forEach(v => {
+    const el = $(v);
+    el.classList.remove('active');
+  });
+  $(id).classList.add('active');
+}
+
+// ── JIKAN API ──────────────────────────────────────────────────────────────
+async function jikanTop(type) {
+  if (cache[type]) return cache[type];
+  const url = type === 'all'
+    ? `${JIKAN}/top/anime?limit=24`
+    : `${JIKAN}/top/anime?type=${type}&limit=24`;
+  try {
+    const r   = await fetch(url);
+    const js  = await r.json();
+    cache[type] = js.data || [];
+    return cache[type];
+  } catch { return []; }
+}
+
+async function jikanSearch(q) {
+  try {
+    const r   = await fetch(`${JIKAN}/anime?q=${encodeURIComponent(q)}&limit=24&order_by=score&sort=desc`);
+    const js  = await r.json();
+    return js.data || [];
+  } catch { return []; }
+}
+
+// ── RENDER GRID ────────────────────────────────────────────────────────────
+function renderSkeletons() {
+  $('anime-grid').innerHTML =
+    Array(12).fill('<div class="skel skel-card"></div>').join('');
+}
+
+function renderGrid(items, label) {
+  if (label) $('grid-label').textContent = label;
+  const grid = $('anime-grid');
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>No results</h3><p>Try a different search or category.</p></div>`;
+    return;
   }
-  if (data.event === 'complete' && currentMal) {
-    toast('Episode complete! Loading next... ▶');
+  grid.innerHTML = items.map((a, i) => {
+    const img   = a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || '';
+    const title = he(a.title_english || a.title || '');
+    const score = a.score ? `⭐ ${a.score}` : '';
+    const eps   = a.episodes ? `${a.episodes} ep` : '';
+    const type  = a.type || '';
+    const yr    = a.year ? ` · ${a.year}` : '';
+    const rank  = a.rank ? `#${a.rank}` : '';
+    return `<div class="acard" data-mal="${a.mal_id}" data-title="${title}">
+      <div class="card-thumb">
+        <img src="${img}" alt="${title}" loading="lazy" onerror="this.parentNode.style.background='#212121'">
+        <div class="card-ov"><div class="play-ring">▶</div></div>
+        ${score ? `<div class="badge score">${score}</div>` : ''}
+        ${eps   ? `<div class="badge eps">${eps}</div>`     : ''}
+        ${rank  ? `<div class="badge rank">${rank}</div>`   : ''}
+      </div>
+      <div class="card-info">
+        <div class="card-title">${title}</div>
+        <div class="card-meta">${type}${yr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Event delegation — single listener on #anime-grid
+$('anime-grid').addEventListener('click', e => {
+  const card = e.target.closest('.acard');
+  if (!card) return;
+  loadPlayer(card.dataset.mal, 1, curLang, card.dataset.title);
+});
+
+// ── BROWSE / CHIPS ─────────────────────────────────────────────────────────
+async function loadHomeGrid(type, label) {
+  showView('home-view');
+  renderSkeletons();
+  const animes = await jikanTop(type);
+  renderGrid(animes, label);
+}
+
+function goHome() {
+  setNav('home');
+  // restore active chip
+  const activeChip = document.querySelector('.chip.active');
+  const type  = activeChip?.dataset.chip || 'all';
+  const label = activeChip?.textContent || 'Top Anime';
+  loadHomeGrid(type, label === 'All' ? 'Top Anime' : label);
+}
+
+function browseCategory(type, label) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  const match = document.querySelector(`.chip[data-chip="${type}"]`);
+  if (match) match.classList.add('active');
+  loadHomeGrid(type, label);
+}
+
+function chipClick(el, type, label) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  setNav('home');
+  loadHomeGrid(type, label);
+}
+
+// ── SEARCH ─────────────────────────────────────────────────────────────────
+async function doSearch() {
+  const q = $('q').value.trim();
+  if (!q) return;
+  setNav('');
+  showView('home-view');
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  renderSkeletons();
+  $('grid-label').textContent = `Results for "${q}"`;
+  const animes = await jikanSearch(q);
+  renderGrid(animes);
+}
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+// ── PLAYER ─────────────────────────────────────────────────────────────────
+function streamUrl(mal, ep, lang) {
+  return `https://megaplay.buzz/stream/mal/${mal}/${ep}/${lang}`;
+}
+
+function loadPlayer(mal, ep, lang, title) {
+  mal   = parseInt(mal);
+  ep    = parseInt(ep) || 1;
+  curMal   = mal;
+  curEp    = ep;
+  curLang  = lang || 'dub';
+  curTitle = title || `MAL #${mal}`;
+
+  $('pframe').src            = streamUrl(mal, ep, curLang);
+  $('w-title').textContent   = curTitle;
+  $('w-sub').textContent     = `Episode ${ep}`;
+  $('ep-in').value           = ep;
+  $('btn-dub').className     = curLang === 'dub' ? 'active' : '';
+  $('btn-sub').className     = curLang === 'sub' ? 'active' : '';
+
+  setNav('');
+  showView('watch-view');
+  saveCW(mal, ep, curTitle);
+  syncDebug();
+  fillRelated();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function skipEp(d) { loadPlayer(curMal, Math.max(1, curEp + d), curLang, curTitle); }
+function goToEp()  { loadPlayer(curMal, parseInt($('ep-in').value) || 1, curLang, curTitle); }
+function setLang(l){ curLang = l; loadPlayer(curMal, curEp, l, curTitle); }
+
+// ── RELATED PANEL ──────────────────────────────────────────────────────────
+async function fillRelated() {
+  const el = $('related');
+  el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px">Loading…</div>';
+  const animes = await jikanTop('all');
+  const others = animes.filter(a => a.mal_id !== curMal).slice(0, 10);
+  el.innerHTML = others.map(a => {
+    const img   = a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || '';
+    const title = he(a.title_english || a.title || '');
+    const score = a.score ? `⭐ ${a.score}` : '';
+    return `<div class="rel-card" data-mal="${a.mal_id}" data-title="${title}">
+      <div class="rel-thumb"><img src="${img}" alt="${title}" loading="lazy" onerror="this.parentNode.style.background='#212121'"></div>
+      <div class="rel-info">
+        <div class="rel-name">${title}</div>
+        <div class="rel-meta">${a.type || ''}${score ? ' · ' + score : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+$('related').addEventListener('click', e => {
+  const c = e.target.closest('.rel-card');
+  if (!c) return;
+  loadPlayer(c.dataset.mal, 1, curLang, c.dataset.title);
+});
+
+// ── WATCHLIST / CONTINUE ───────────────────────────────────────────────────
+function saveCW(mal, ep, title) {
+  let cw = JSON.parse(localStorage.getItem(CW_KEY) || '[]');
+  cw = cw.filter(x => x.mal !== mal);
+  cw.unshift({ mal, ep, title, ts: Date.now() });
+  localStorage.setItem(CW_KEY, JSON.stringify(cw.slice(0, 12)));
+}
+
+function addToWL() {
+  if (!curMal) { toast('Nothing playing'); return; }
+  let wl = JSON.parse(localStorage.getItem(WL_KEY) || '[]');
+  if (wl.find(x => x.mal === curMal)) { toast('Already in watchlist'); return; }
+  wl.unshift({ mal: curMal, title: curTitle });
+  localStorage.setItem(WL_KEY, JSON.stringify(wl));
+  toast('Added to watchlist ✓');
+}
+
+function showSaved() {
+  setNav('continue');
+  showView('saved-view');
+  const cw = JSON.parse(localStorage.getItem(CW_KEY) || '[]');
+  const wl = JSON.parse(localStorage.getItem(WL_KEY) || '[]');
+
+  function makeCards(items, showEp) {
+    if (!items.length) return `<div class="empty"><div class="empty-icon">📭</div><h3>Nothing here yet</h3><p>${showEp ? 'Start watching something.' : 'Save anime to your watchlist.'}</p></div>`;
+    return items.map(item => {
+      const t = he(item.title);
+      return `<div class="acard" data-mal="${item.mal}" data-ep="${item.ep || 1}" data-title="${t}">
+        <div class="card-thumb" style="display:flex;align-items:center;justify-content:center;font-size:42px;background:var(--surface2)">
+          📺
+          ${showEp ? `<div class="badge score">EP ${item.ep}</div>` : ''}
+          <div class="card-ov"><div class="play-ring">▶</div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">${t}</div>
+          <div class="card-meta">MAL #${item.mal}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('cw-grid').innerHTML = makeCards(cw, true);
+  $('wl-grid').innerHTML = makeCards(wl, false);
+}
+
+['cw-grid','wl-grid'].forEach(gridId => {
+  $(gridId).addEventListener('click', e => {
+    const c = e.target.closest('.acard');
+    if (!c) return;
+    loadPlayer(c.dataset.mal, c.dataset.ep || 1, curLang, c.dataset.title);
+  });
+});
+
+// ── MANUAL ────────────────────────────────────────────────────────────────
+function showManual() { setNav('manual'); showView('manual-view'); }
+function loadFromManual() {
+  const mal  = $('mal-in').value;
+  const name = $('name-in').value || `MAL #${mal}`;
+  if (!mal) { toast('Enter a MAL ID'); return; }
+  loadPlayer(mal, 1, curLang, name);
+}
+function quickLoad(mal, title) {
+  $('mal-in').value  = mal;
+  $('name-in').value = title;
+  loadPlayer(mal, 1, curLang, title);
+}
+
+// ── AUTO-NEXT ─────────────────────────────────────────────────────────────
+window.addEventListener('message', e => {
+  let d = e.data;
+  if (typeof d === 'string') { try { d = JSON.parse(d); } catch { return; } }
+  if (d.event === 'complete' && curMal) {
+    toast('Episode done! Loading next… ▶');
     setTimeout(() => skipEp(1), 1500);
   }
 });
 
-renderContinue();
-renderWatchlist();
+// ── INIT ──────────────────────────────────────────────────────────────────
+loadHomeGrid('all', 'Top Anime');
 </script>
 </body>
 </html>
