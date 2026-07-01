@@ -317,6 +317,28 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .empty h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
 .empty p{font-size:13px}
 
+/* ── ADBLOCK BANNER ── */
+#ab-banner{
+  background:#1a1208;
+  border-bottom:1px solid rgba(255,180,0,.18);
+  padding:10px 20px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  font-size:13px;line-height:1.4;
+}
+#ab-banner.gone{display:none}
+.ab-icon{font-size:20px;flex-shrink:0}
+.ab-text{flex:1;color:#d4aa55}
+.ab-text strong{color:#f5c842;font-weight:600}
+.ab-text a{color:#f5c842;text-decoration:underline;text-underline-offset:2px}
+.ab-text a:hover{color:#fff}
+.ab-dismiss{
+  background:none;border:1px solid rgba(245,200,66,.3);
+  color:#d4aa55;font-size:12px;font-family:'Inter',sans-serif;
+  padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:all .15s;
+}
+.ab-dismiss:hover{background:rgba(245,200,66,.1);border-color:rgba(245,200,66,.6)}
+
 /* ── TOAST ── */
 #toast{
   position:fixed;bottom:1.8rem;left:50%;
@@ -428,6 +450,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
         <button id="search-btn" onclick="doSearch()">⌕</button>
       </div>
     </header>
+
+    <!-- ── ADBLOCKER NOTICE ── -->
+    <div id="ab-banner">
+      <span class="ab-icon">⚠️</span>
+      <span class="ab-text">
+        <strong>Heads up:</strong> Video streams on this site are sourced from third-party providers.
+        These providers may attempt redirects or pop-ups that <strong>I have no control over</strong>.
+        It's strongly recommended to use an adblocker such as
+        <a href="https://ublockorigin.com" target="_blank" rel="noopener">uBlock Origin</a>
+        before watching anything here.
+      </span>
+      <button class="ab-dismiss" onclick="dismissBanner()">Got it</button>
+    </div>
 
     <!-- ── HOME VIEW ── -->
     <div id="home-view" class="view active">
@@ -826,6 +861,15 @@ window.addEventListener('message', e => {
     setTimeout(() => skipEp(1), 1500);
   }
 });
+
+// ── ADBLOCKER BANNER ──────────────────────────────────────────────────────
+function dismissBanner() {
+  $('ab-banner').classList.add('gone');
+  localStorage.setItem('omnianime_ab_dismissed', '1');
+}
+if (localStorage.getItem('omnianime_ab_dismissed') === '1') {
+  $('ab-banner').classList.add('gone');
+}
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 loadHomeGrid('all', 'Top Anime');
